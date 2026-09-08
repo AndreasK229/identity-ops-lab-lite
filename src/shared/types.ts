@@ -77,7 +77,6 @@ export type TicketMessage = {
 
 export type Ticket = {
   id: string;
-  scenarioType: ScenarioType;
   employeeId: string;
   applicationId: string;
   title: string;

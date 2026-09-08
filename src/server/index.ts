@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { applyAdminAction, closeTicket, publicState, resetSimulation, scenarioSummaries, sendTicketMessage } from './simulation.js';
+import { applyAdminAction, closeTicket, publicState, resetSimulation, sendTicketMessage } from './simulation.js';
 import type { AdminAction } from '../shared/types.js';
 
 const host = process.env.IOL_API_HOST ?? '127.0.0.1';
@@ -14,7 +14,6 @@ await app.register(cors, {
 
 app.get('/api/health', async () => ({ ok: true, name: 'identity-ops-lab-lite' }));
 app.get('/api/state', async () => publicState());
-app.get('/api/scenarios', async () => scenarioSummaries());
 app.post('/api/reset', async () => resetSimulation());
 
 app.post<{ Body: AdminAction }>('/api/admin-action', async (request) => ({

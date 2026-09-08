@@ -1,7 +1,8 @@
 import type { AdminAction, ChatResult, PublicState } from '../shared/types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+  const response = await fetch(`${baseUrl}${path}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init
   });

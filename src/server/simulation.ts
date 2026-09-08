@@ -24,12 +24,16 @@ type Scenario = {
   expectedRemediation: string[];
 };
 
+type InternalTicket = Ticket & {
+  scenarioType: ScenarioType;
+};
+
 type Store = {
   employees: Employee[];
   applications: AppRegistration[];
   groups: Group[];
   devices: Device[];
-  tickets: Ticket[];
+  tickets: InternalTicket[];
   signIns: SignInLog[];
   audit: AuditEvent[];
   scenarios: Scenario[];
@@ -77,7 +81,7 @@ function makeStore(): Store {
     { id: 'dev-finn', ownerId: 'emp-finn', name: 'FM-ANDROID-12', os: 'Android 15', managed: true, compliant: true, lastCheckIn: stamp(-60) }
   ];
 
-  const tickets: Ticket[] = [
+  const tickets: InternalTicket[] = [
     ticket('tick-1001', 'missing_group', 'emp-ada', 'app-ledger', 'LedgerPro opens but says I am not assigned', 'Ada can authenticate successfully, but LedgerPro denies app access after sign-in.', 'high', -28),
     ticket('tick-1002', 'mfa_reset', 'emp-ben', 'app-people', 'New phone broke my People Hub sign-in', 'Ben replaced a phone and cannot satisfy MFA for People Hub.', 'medium', -24),
     ticket('tick-1003', 'non_compliant_device', 'emp-cora', 'app-crm', 'CRM blocked by device compliance', 'Cora needs CRM before a customer call, but Conditional Access blocks the device.', 'high', -18),
@@ -101,7 +105,7 @@ function makeStore(): Store {
   return next;
 }
 
-function ticket(id: string, scenarioType: ScenarioType, employeeId: string, applicationId: string, title: string, description: string, priority: Ticket['priority'], offset: number): Ticket {
+function ticket(id: string, scenarioType: ScenarioType, employeeId: string, applicationId: string, title: string, description: string, priority: Ticket['priority'], offset: number): InternalTicket {
   return {
     id,
     scenarioType,
@@ -139,7 +143,18 @@ export function publicState(): PublicState {
     applications: store.applications,
     groups: store.groups,
     devices: store.devices,
-    tickets: store.tickets,
+    tickets: store.tickets.map((ticketItem) => ({
+      id: ticketItem.id,
+      employeeId: ticketItem.employeeId,
+      applicationId: ticketItem.applicationId,
+      title: ticketItem.title,
+      description: ticketItem.description,
+      priority: ticketItem.priority,
+      status: ticketItem.status,
+      createdAt: ticketItem.createdAt,
+      updatedAt: ticketItem.updatedAt,
+      messages: ticketItem.messages
+    })),
     signIns: store.signIns.slice(-18).reverse(),
     audit: store.audit.slice(-30).reverse(),
     resolution
@@ -274,7 +289,13 @@ export function getResolution(ticketId: string): ResolutionCheck {
 }
 
 export function scenarioSummaries() {
-  return store.scenarios.map(({ expectedRemediation: _hidden, ...publicScenario }) => publicScenario);
+  return store.scenarios.map((scenario) => ({
+    id: scenario.id,
+    type: scenario.type,
+    ticketId: scenario.ticketId,
+    employeeId: scenario.employeeId,
+    applicationId: scenario.applicationId
+  }));
 }
 
 function appendSignIn(current: Store, employeeId: string, applicationId: string, access: AccessDecision) {
