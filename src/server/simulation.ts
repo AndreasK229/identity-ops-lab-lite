@@ -127,6 +127,10 @@ export function resetSimulation() {
   return publicState();
 }
 
+export function checkAccess(employeeId: string, applicationId: string) {
+  return evaluateAccess(store, employeeId, applicationId);
+}
+
 export function publicState(): PublicState {
   const resolution = Object.fromEntries(store.tickets.map((item) => [item.id, getResolution(item.id)]));
   return {
