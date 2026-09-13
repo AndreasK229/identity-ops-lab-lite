@@ -1,7 +1,7 @@
-import { Check, CircleAlert, History, Lock, MessageSquare, RefreshCcw, RotateCcw, ShieldCheck, UserRound } from 'lucide-react';
+import { Check, CircleAlert, GitBranch, History, Lock, MessageSquare, RefreshCcw, RotateCcw, ShieldCheck, UserRound } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { closeTicket, loadState, resetState, runAction, sendMessage } from './api';
-import type { AdminAction, Employee, PublicState, Ticket } from '../shared/types';
+import type { AdminAction, AuditEvent, Employee, PublicState, SignInLog, Ticket } from '../shared/types';
 
 export function App() {
   const [state, setState] = useState<PublicState | null>(null);
@@ -25,6 +25,9 @@ export function App() {
   const resolution = selected && state?.resolution[selected.id];
   const ticketLogs = selected ? state?.signIns.filter((log) => log.employeeId === selected.employeeId) ?? [] : [];
   const employeeGroups = employee ? state?.groups.filter((group) => employee.groupIds.includes(group.id)) ?? [] : [];
+  const requiredGroup = state?.groups.find((group) => group.id === app?.requiredGroupId);
+  const latestDecision = ticketLogs[0];
+  const timeline = selected && state ? buildTimeline(selected, state, ticketLogs) : [];
 
   async function action(nextAction: AdminAction, label: string) {
     const result = await runAction(nextAction);
@@ -77,7 +80,7 @@ export function App() {
       <section className="layout">
         <aside className="queue" aria-label="Ticket queue">
           <div className="panel-heading">
-            <h2>Ticket Queue</h2>
+              <h2>Identity Cases</h2>
             <span>{state.tickets.filter((ticket) => ticket.status !== 'closed').length} open</span>
           </div>
           {state.tickets.map((ticket) => (
@@ -97,7 +100,7 @@ export function App() {
         <section className="ticket-detail">
           <div className="detail-header">
             <div>
-              <p className="eyebrow">{selected.id} · {app.name}</p>
+              <p className="eyebrow">Identity case · {selected.id} · {app.name}</p>
               <h2>{selected.title}</h2>
               <p>{selected.description}</p>
             </div>
@@ -148,7 +151,19 @@ export function App() {
 
         <aside className="evidence">
           <section>
-            <h3><ShieldCheck size={16} /> Resolution</h3>
+            <h3><GitBranch size={16} /> Policy Evidence</h3>
+            <div className="evidence-grid">
+              <EvidenceItem label="Required group" value={requiredGroup?.name ?? 'Unknown group'} state={employee.groupIds.includes(app.requiredGroupId)} />
+              <EvidenceItem label="Actual assignment" value={employee.groupIds.includes(app.requiredGroupId) ? 'Assigned' : 'Missing'} state={employee.groupIds.includes(app.requiredGroupId)} />
+              <EvidenceItem label="MFA requirement" value={app.requiresMfa ? `Required · ${employee.mfaState.replace('_', ' ')}` : 'Not required'} state={!app.requiresMfa || employee.mfaState === 'registered'} />
+              <EvidenceItem label="Device requirement" value={app.requiresCompliantDevice ? `${device.name} · ${device.compliant ? 'compliant' : 'non-compliant'}` : 'Not required'} state={!app.requiresCompliantDevice || device.compliant} />
+              <EvidenceItem label="Account state" value={`${employee.accountState} · ${employee.employment}`} state={employee.employment === 'terminated' ? employee.accountState === 'disabled' : employee.accountState === 'enabled'} />
+              <EvidenceItem label="Latest decision" value={latestDecision ? `${latestDecision.result} · ${latestDecision.correlationId}` : 'No access check yet'} state={latestDecision?.result === 'success'} />
+            </div>
+          </section>
+
+          <section>
+            <h3><ShieldCheck size={16} /> Identity Resolution Gate</h3>
             {resolution.requirements.map((item) => (
               <div className="check-row" key={item.label}>
                 {item.satisfied ? <Check size={16} /> : <CircleAlert size={16} />}
@@ -158,7 +173,7 @@ export function App() {
           </section>
 
           <section>
-            <h3>Remediation</h3>
+            <h3>Simulated Admin Actions</h3>
             <div className="actions">
               <button type="button" onClick={() => action({ type: 'add_group', employeeId: employee.id, groupId: app.requiredGroupId }, 'Group membership updated.')}>Add app group</button>
               <button type="button" onClick={() => action({ type: 'remove_group', employeeId: employee.id, groupId: app.requiredGroupId }, 'Group membership removed.')}>Remove app group</button>
@@ -171,7 +186,21 @@ export function App() {
           </section>
 
           <section>
-            <h3>Sign-In Logs</h3>
+            <h3>Access Check Timeline</h3>
+            <div className="timeline">
+              {timeline.map((item) => (
+                <article key={item.id} className={`timeline-item ${item.kind}`}>
+                  <span>{item.label}</span>
+                  <strong>{item.title}</strong>
+                  <p>{item.detail}</p>
+                  <small>{new Date(item.timestamp).toLocaleTimeString()}</small>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section>
+            <h3>Authentication & CA Evidence</h3>
             <div className="log-list">
               {ticketLogs.map((log) => (
                 <article key={log.id}>
@@ -201,6 +230,58 @@ export function App() {
   );
 }
 
+function EvidenceItem({ label, value, state }: { label: string; value: string; state: boolean }) {
+  return (
+    <div className={`evidence-item ${state ? 'ok' : 'blocked'}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
 function employeeName(state: PublicState, ticket: Ticket) {
   return state.employees.find((employee: Employee) => employee.id === ticket.employeeId)?.name ?? 'Unknown employee';
+}
+
+function buildTimeline(ticket: Ticket, state: PublicState, logs: SignInLog[]) {
+  const employee = state.employees.find((item) => item.id === ticket.employeeId);
+  const device = employee ? state.devices.find((item) => item.id === employee.deviceId) : undefined;
+  const relatedAudit = employee
+    ? state.audit.filter(
+        (event) =>
+          event.target === employee.name ||
+          event.target === device?.name ||
+          event.target === ticket.id ||
+          event.details.toLowerCase().includes(employee.name.toLowerCase())
+      )
+    : [];
+
+  return [
+    {
+      id: `${ticket.id}-opened`,
+      kind: 'case',
+      timestamp: ticket.createdAt,
+      label: 'Case opened',
+      title: ticket.title,
+      detail: ticket.description
+    },
+    ...logs.map((log) => ({
+      id: log.id,
+      kind: log.result === 'success' ? 'success' : 'blocked',
+      timestamp: log.timestamp,
+      label: 'Access check',
+      title: `${log.applicationName} · ${log.result}`,
+      detail: `${log.reason} · ${log.correlationId}`
+    })),
+    ...relatedAudit.map((event: AuditEvent) => ({
+      id: event.id,
+      kind: 'admin',
+      timestamp: event.timestamp,
+      label: 'Admin action',
+      title: event.action,
+      detail: `${event.target}: ${event.details}`
+    }))
+  ]
+    .sort((left, right) => Date.parse(left.timestamp) - Date.parse(right.timestamp))
+    .slice(-8);
 }

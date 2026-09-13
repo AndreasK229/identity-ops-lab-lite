@@ -5,7 +5,6 @@ services:
       IOL_API_HOST: 0.0.0.0
       IOL_API_PORT: 4173
       IOL_WEB_ORIGIN: http://localhost:5173
-      IOL_ENABLE_OLLAMA: "false"
     ports:
       - "127.0.0.1:4173:4173"
 

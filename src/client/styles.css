@@ -348,6 +348,43 @@ h4 {
   overflow: auto;
 }
 
+.evidence-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.evidence-item {
+  display: grid;
+  gap: 4px;
+  min-height: 64px;
+  padding: 9px;
+  border: 1px solid #d7e0e8;
+  background: #f8fafc;
+}
+
+.evidence-item span {
+  color: #647485;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.evidence-item strong {
+  color: #233244;
+  font-size: 13px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.evidence-item.ok {
+  border-left: 3px solid #177e89;
+}
+
+.evidence-item.blocked {
+  border-left: 3px solid #b65327;
+}
+
 .check-row {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
@@ -371,6 +408,54 @@ h4 {
 .actions button {
   min-height: 38px;
   padding: 8px;
+}
+
+.timeline {
+  display: grid;
+  gap: 8px;
+}
+
+.timeline-item {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border-left: 3px solid #9aa9b8;
+  background: #f8fafc;
+}
+
+.timeline-item.case {
+  border-left-color: #59708a;
+}
+
+.timeline-item.admin {
+  border-left-color: #6f5aa8;
+}
+
+.timeline-item.blocked {
+  border-left-color: #b65327;
+}
+
+.timeline-item.success {
+  border-left-color: #177e89;
+}
+
+.timeline-item span,
+.timeline-item small {
+  color: #647485;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.timeline-item strong {
+  font-size: 13px;
+}
+
+.timeline-item p {
+  margin: 0;
+  color: #566575;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .log-list {
@@ -425,6 +510,10 @@ h4 {
   .evidence {
     height: auto;
     min-height: 0;
+  }
+
+  .evidence-grid {
+    grid-template-columns: 1fr;
   }
 
   .chat-form {
