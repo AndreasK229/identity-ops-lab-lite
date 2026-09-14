@@ -99,9 +99,15 @@ function makeStore(): Store {
 
   const next: Store = { employees, applications, groups, devices, tickets, scenarios, signIns: [], audit: [], sequence: 1 };
   for (const current of tickets) {
-    appendSignIn(next, current.employeeId, current.applicationId, evaluateAccess(next, current.employeeId, current.applicationId));
+    appendSignIn(
+      next,
+      current.employeeId,
+      current.applicationId,
+      evaluateAccess(next, current.employeeId, current.applicationId),
+      new Date(Date.parse(current.createdAt) + 2 * 60_000).toISOString()
+    );
   }
-  next.audit.push(event(next, 'system', 'seed_scenarios', 'identity-ops-lab-lite', 'Loaded deterministic public demo data.'));
+  next.audit.push(event(next, 'system', 'seed_scenarios', 'identity-ops-lab-lite', 'Loaded deterministic public demo data.', stamp(0)));
   return next;
 }
 
@@ -298,13 +304,13 @@ export function scenarioSummaries() {
   }));
 }
 
-function appendSignIn(current: Store, employeeId: string, applicationId: string, access: AccessDecision) {
+function appendSignIn(current: Store, employeeId: string, applicationId: string, access: AccessDecision, timestamp = new Date().toISOString()) {
   const employee = must(current.employees.find((item) => item.id === employeeId), 'employee');
   const app = must(current.applications.find((item) => item.id === applicationId), 'application');
   const device = must(current.devices.find((item) => item.id === employee.deviceId), 'device');
   current.signIns.push({
     id: id('signin', current),
-    timestamp: new Date().toISOString(),
+    timestamp,
     employeeId,
     applicationId,
     applicationName: app.name,
@@ -348,8 +354,8 @@ function decision(allowed: boolean, reason: AccessDecision['reason'], message: s
   return { allowed, reason, message, correlationId };
 }
 
-function event(current: Store, actor: string, action: string, target: string, details: string): AuditEvent {
-  return { id: id('audit', current), timestamp: new Date().toISOString(), actor, action, target, details };
+function event(current: Store, actor: string, action: string, target: string, details: string, timestamp = new Date().toISOString()): AuditEvent {
+  return { id: id('audit', current), timestamp, actor, action, target, details };
 }
 
 function id(prefix: string, current = store) {

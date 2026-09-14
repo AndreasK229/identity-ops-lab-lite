@@ -24,6 +24,15 @@ describe('identity ops lite simulation', () => {
     expect(JSON.stringify(scenarios)).not.toContain('expectedRemediation');
   });
 
+  it('keeps public ticket state free from scenario labels and deterministic seed timestamps', () => {
+    const first = publicState();
+    resetSimulation();
+    const second = publicState();
+
+    expect(JSON.stringify(first.tickets)).not.toContain('scenarioType');
+    expect(first.signIns.map((log) => log.timestamp)).toEqual(second.signIns.map((log) => log.timestamp));
+  });
+
   it('admin remediation actions update identity state and write audit events', () => {
     applyAdminAction({ type: 'add_group', employeeId: 'emp-ada', groupId: 'grp-finance' });
     applyAdminAction({ type: 'complete_mfa_registration', employeeId: 'emp-ben' });
