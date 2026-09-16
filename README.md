@@ -27,6 +27,12 @@ For IAM hiring managers and reviewers, this repo demonstrates:
 
 This is the public community/demo edition. It intentionally avoids live Entra execution, Microsoft Graph writes, scoring, premium scenario packs, hosted SaaS behavior, tenant mapping automation, Ollama/LLM persona generation, and advanced autonomous persona generation.
 
+## Lite Scope And Extension Boundary
+
+Identity Ops Lab Lite is intentionally scoped as a deterministic local simulator. It demonstrates the operator workflow, evidence model, access decision loop, audited remediation, retry verification, and close gate.
+
+Higher-risk capabilities are intentionally excluded from this public edition: live identity-provider adapters, real tenant mapping, hosted multi-tenant operation, scoring/evaluation, richer scenario packs, and advanced persona generation. Keeping those outside the lite repo preserves safety, reviewability, and a clean public trust boundary.
+
 ## Why This Is Not A Ticket System
 
 The ticket queue is only the intake surface. The lab models the IAM operation behind the ticket:
