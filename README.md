@@ -38,7 +38,7 @@ Higher-risk capabilities are intentionally excluded from this public edition: li
 The ticket queue is only the intake surface. The lab models the IAM operation behind the ticket:
 
 - A server-side access engine evaluates account, MFA, group, application, and managed-device state.
-- Operators see IAM evidence, not hidden scenario truth.
+- Operators see IAM evidence and resolution controls, while scenario labels and hidden remediation recipes stay server-side.
 - Remediation actions mutate simulated identity state and write audit events.
 - Retry phrases trigger a fresh server-side access check.
 - Ticket closure is blocked until the identity resolution gate is satisfied.
@@ -63,7 +63,7 @@ docker compose up --build
 
 Open [http://localhost:5173](http://localhost:5173).
 
-The API binds to `127.0.0.1:4173` through Compose. The web console binds to `127.0.0.1:5173`.
+Docker Compose serves the built React console and Fastify API from one localhost-bound app container on `127.0.0.1:5173`.
 
 ## Quickstart With Node
 
@@ -73,6 +73,8 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173).
+
+In Node development mode, Vite serves the console on `127.0.0.1:5173` and proxies API calls to Fastify on `127.0.0.1:4173`.
 
 ## Demo Role
 
@@ -106,7 +108,7 @@ The seed includes 6 synthetic employees, 5 applications, 5 groups, managed devic
 ## Security And Trust Boundaries
 
 - All names, devices, IP addresses, apps, and groups are synthetic.
-- Scenario truth stays in the server module and is not sent to the browser.
+- Scenario labels and hidden remediation recipes stay in the server module; the browser receives realistic IAM evidence and a resolution gate.
 - Admin actions are simulated and create audit events.
 - `.env` files are ignored; `.env.example` contains only safe localhost defaults.
 - Default services bind to localhost.
