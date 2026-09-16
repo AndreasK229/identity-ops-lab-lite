@@ -1,4 +1,4 @@
-import type { AdminAction, ChatResult, PublicState } from '../shared/types';
+import type { AdminAction, ChatResult, PublicState, ResolutionCheck } from '../shared/types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -33,5 +33,5 @@ export function sendMessage(ticketId: string, body: string) {
 }
 
 export function closeTicket(ticketId: string) {
-  return request<{ closed: boolean; state: PublicState }>(`/api/tickets/${ticketId}/close`, { method: 'POST' });
+  return request<{ closed: boolean; resolution: ResolutionCheck; state: PublicState }>(`/api/tickets/${ticketId}/close`, { method: 'POST' });
 }

@@ -28,6 +28,7 @@ export function App() {
   const requiredGroup = state?.groups.find((group) => group.id === app?.requiredGroupId);
   const latestDecision = ticketLogs[0];
   const timeline = selected && state ? buildTimeline(selected, state, ticketLogs) : [];
+  const missingRequirements = resolution?.requirements.filter((item) => !item.satisfied) ?? [];
 
   async function action(nextAction: AdminAction, label: string) {
     const result = await runAction(nextAction);
@@ -48,7 +49,8 @@ export function App() {
     if (!selected) return;
     const result = await closeTicket(selected.id);
     setState(result.state);
-    setNotice(result.closed ? 'Ticket closed.' : 'Close blocked until remediation is complete.');
+    const missing = result.resolution.requirements.filter((item) => !item.satisfied).map((item) => item.label).join(', ');
+    setNotice(result.closed ? 'Ticket closed.' : `Close blocked: ${missing}`);
   }
 
   async function reset() {
@@ -104,9 +106,14 @@ export function App() {
               <h2>{selected.title}</h2>
               <p>{selected.description}</p>
             </div>
-            <button type="button" onClick={tryClose}>
-              <Lock size={16} /> Close ticket
-            </button>
+            <div className="close-controls">
+              <span className={`gate-hint ${resolution.readyToClose ? 'ready' : 'blocked'}`}>
+                {resolution.readyToClose ? 'Ready to close' : `Blocked: ${missingRequirements.map((item) => item.label).join(', ')}`}
+              </span>
+              <button type="button" onClick={tryClose} title={resolution.summary}>
+                <Lock size={16} /> Close ticket
+              </button>
+            </div>
           </div>
 
           <div className="workspace-grid">
