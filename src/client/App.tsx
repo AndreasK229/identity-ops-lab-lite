@@ -1,4 +1,4 @@
-import { Check, CircleAlert, GitBranch, History, Lock, MessageSquare, RefreshCcw, RotateCcw, ShieldCheck, UserRound } from 'lucide-react';
+import { GitBranch, History, Lock, MessageSquare, RefreshCcw, RotateCcw, ShieldCheck, UserRound } from 'lucide-react';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { closeTicket, loadState, resetState, runAction, sendMessage } from './api';
 import type { AdminAction, AuditEvent, Employee, PublicState, SignInLog, Ticket } from '../shared/types';
@@ -27,8 +27,8 @@ export function App() {
   const employeeGroups = employee ? state?.groups.filter((group) => employee.groupIds.includes(group.id)) ?? [] : [];
   const requiredGroup = state?.groups.find((group) => group.id === app?.requiredGroupId);
   const latestDecision = ticketLogs[0];
+  const latestCaseAction = selected && employee && state ? latestRelatedAudit(state, selected, employee, device) : undefined;
   const timeline = selected && state ? buildTimeline(selected, state, ticketLogs) : [];
-  const missingRequirements = resolution?.requirements.filter((item) => !item.satisfied) ?? [];
 
   async function action(nextAction: AdminAction, label: string) {
     const result = await runAction(nextAction);
@@ -49,8 +49,7 @@ export function App() {
     if (!selected) return;
     const result = await closeTicket(selected.id);
     setState(result.state);
-    const missing = result.resolution.requirements.filter((item) => !item.satisfied).map((item) => item.label).join(', ');
-    setNotice(result.closed ? 'Ticket closed.' : `Close blocked: ${missing}`);
+    setNotice(result.closed ? 'Ticket closed.' : result.resolution.summary);
   }
 
   async function reset() {
@@ -108,7 +107,7 @@ export function App() {
             </div>
             <div className="close-controls">
               <span className={`gate-hint ${resolution.readyToClose ? 'ready' : 'blocked'}`}>
-                {resolution.readyToClose ? 'Ready to close' : `Blocked: ${missingRequirements.map((item) => item.label).join(', ')}`}
+                {resolution.readyToClose ? 'Ready to close' : 'Closure review blocked'}
               </span>
               <button type="button" onClick={tryClose} title={resolution.summary}>
                 <Lock size={16} /> Close ticket
@@ -170,13 +169,14 @@ export function App() {
           </section>
 
           <section>
-            <h3><ShieldCheck size={16} /> Identity Resolution Gate</h3>
-            {resolution.requirements.map((item) => (
-              <div className="check-row" key={item.label}>
-                {item.satisfied ? <Check size={16} /> : <CircleAlert size={16} />}
-                <span>{item.label}</span>
-              </div>
-            ))}
+            <h3><ShieldCheck size={16} /> Closure Review</h3>
+            <div className="review-grid">
+              <EvidenceItem label="Closure status" value={resolution.readyToClose ? 'Review passed' : 'Blocked'} state={resolution.readyToClose} />
+              <EvidenceItem label="Ticket state" value={selected.status} state={selected.status === 'closed'} />
+              <EvidenceItem label="Latest access check" value={latestDecision ? `${latestDecision.result} · ${latestDecision.correlationId}` : 'No access check'} state={latestDecision?.result === 'success'} />
+              <EvidenceItem label="Latest case action" value={latestCaseAction ? latestCaseAction.action : 'No operator action'} state={Boolean(latestCaseAction)} />
+            </div>
+            <p className="review-note">{resolution.summary}</p>
           </section>
 
           <section>
@@ -248,6 +248,16 @@ function EvidenceItem({ label, value, state }: { label: string; value: string; s
 
 function employeeName(state: PublicState, ticket: Ticket) {
   return state.employees.find((employee: Employee) => employee.id === ticket.employeeId)?.name ?? 'Unknown employee';
+}
+
+function latestRelatedAudit(state: PublicState, ticket: Ticket, employee: Employee, device?: { name: string }) {
+  return state.audit.find(
+    (event) =>
+      event.target === employee.name ||
+      event.target === device?.name ||
+      event.target === ticket.id ||
+      event.details.toLowerCase().includes(employee.name.toLowerCase())
+  );
 }
 
 function buildTimeline(ticket: Ticket, state: PublicState, logs: SignInLog[]) {

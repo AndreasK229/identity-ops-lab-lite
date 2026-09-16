@@ -3,6 +3,7 @@ import type {
   AdminAction,
   AppRegistration,
   AuditEvent,
+  ClosureReview,
   ChatResult,
   Device,
   Employee,
@@ -142,7 +143,7 @@ export function checkAccess(employeeId: string, applicationId: string) {
 }
 
 export function publicState(): PublicState {
-  const resolution = Object.fromEntries(store.tickets.map((item) => [item.id, getResolution(item.id)]));
+  const resolution = Object.fromEntries(store.tickets.map((item) => [item.id, getClosureReview(item.id)]));
   return {
     generatedAt: new Date().toISOString(),
     employees: store.employees,
@@ -248,20 +249,30 @@ export function sendTicketMessage(ticketId: string, body: string): ChatResult {
   const message: TicketMessage = { id: id('msg'), author: 'employee', body: reply, timestamp: new Date().toISOString() };
   ticketItem.messages.push(message);
   ticketItem.updatedAt = message.timestamp;
-  return { message, retry, resolution: getResolution(ticketItem.id), state: publicState() };
+  return { message, retry, resolution: getClosureReview(ticketItem.id), state: publicState() };
 }
 
 export function closeTicket(ticketId: string) {
   const ticketItem = ticketById(ticketId);
   const resolution = getResolution(ticketId);
   if (!resolution.readyToClose) {
-    ticketItem.messages.push({ id: id('msg'), author: 'system', body: `Close blocked: ${resolution.summary}`, timestamp: new Date().toISOString() });
-    return { closed: false, resolution, state: publicState() };
+    const review = getClosureReview(ticketId);
+    ticketItem.messages.push({ id: id('msg'), author: 'system', body: `Close blocked: ${review.summary}`, timestamp: new Date().toISOString() });
+    return { closed: false, resolution: review, state: publicState() };
   }
   ticketItem.status = 'closed';
   ticketItem.updatedAt = new Date().toISOString();
   store.audit.push(event(store, 'Demo Operator', 'close_ticket', ticketItem.id, resolution.summary));
-  return { closed: true, resolution, state: publicState() };
+  return { closed: true, resolution: getClosureReview(ticketId), state: publicState() };
+}
+
+function getClosureReview(ticketId: string): ClosureReview {
+  const resolution = getResolution(ticketId);
+  return {
+    ticketId,
+    readyToClose: resolution.readyToClose,
+    summary: resolution.readyToClose ? 'Closure review passed.' : 'Current evidence does not support closure. Review sign-in evidence, admin actions, and retry verification.'
+  };
 }
 
 export function getResolution(ticketId: string): ResolutionCheck {

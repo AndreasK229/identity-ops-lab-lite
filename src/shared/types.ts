@@ -100,6 +100,12 @@ export type ResolutionCheck = {
   requirements: ResolutionRequirement[];
 };
 
+export type ClosureReview = {
+  ticketId: string;
+  readyToClose: boolean;
+  summary: string;
+};
+
 export type AccessDecision = {
   allowed: boolean;
   reason:
@@ -122,7 +128,7 @@ export type PublicState = {
   tickets: Ticket[];
   signIns: SignInLog[];
   audit: AuditEvent[];
-  resolution: Record<string, ResolutionCheck>;
+  resolution: Record<string, ClosureReview>;
 };
 
 export type AdminAction =
@@ -142,6 +148,6 @@ export type ActionResult = {
 export type ChatResult = {
   message: TicketMessage;
   retry?: AccessDecision;
-  resolution: ResolutionCheck;
+  resolution: ClosureReview;
   state: PublicState;
 };

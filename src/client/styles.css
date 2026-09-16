@@ -413,18 +413,17 @@ h4 {
   border-left: 3px solid #b65327;
 }
 
-.check-row {
+.review-grid {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  align-items: start;
-  padding: 7px 0;
-  border-bottom: 1px solid #edf1f4;
-  font-size: 13px;
 }
 
-.check-row svg {
-  color: #177e89;
+.review-note {
+  margin: 10px 0 0;
+  color: #566575;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .actions {

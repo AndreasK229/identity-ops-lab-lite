@@ -30,6 +30,9 @@ describe('identity ops lite simulation', () => {
     const second = publicState();
 
     expect(JSON.stringify(first.tickets)).not.toContain('scenarioType');
+    expect(JSON.stringify(first.resolution)).not.toContain('requirements');
+    expect(JSON.stringify(first.resolution)).not.toContain('Assigned to');
+    expect(JSON.stringify(first.resolution)).not.toContain('Terminated user account disabled');
     expect(first.signIns.map((log) => log.timestamp)).toEqual(second.signIns.map((log) => log.timestamp));
   });
 
@@ -51,6 +54,7 @@ describe('identity ops lite simulation', () => {
     const result = closeTicket('tick-1001');
     expect(result.closed).toBe(false);
     expect(result.resolution.readyToClose).toBe(false);
+    expect(JSON.stringify(result.resolution)).not.toContain('requirements');
     expect(result.state.tickets.find((ticket) => ticket.id === 'tick-1001')?.status).not.toBe('closed');
   });
 

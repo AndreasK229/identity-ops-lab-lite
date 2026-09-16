@@ -38,10 +38,10 @@ Higher-risk capabilities are intentionally excluded from this public edition: li
 The ticket queue is only the intake surface. The lab models the IAM operation behind the ticket:
 
 - A server-side access engine evaluates account, MFA, group, application, and managed-device state.
-- Operators see IAM evidence and resolution controls, while scenario labels and hidden remediation recipes stay server-side.
+- Operators see IAM evidence and closure controls, while scenario labels and hidden remediation recipes stay server-side.
 - Remediation actions mutate simulated identity state and write audit events.
 - Retry phrases trigger a fresh server-side access check.
-- Ticket closure is blocked until the identity resolution gate is satisfied.
+- Ticket closure is blocked by a hidden server-side resolution gate until the identity state is fixed.
 
 ```text
 Ticket symptom
@@ -78,7 +78,7 @@ In Node development mode, Vite serves the console on `127.0.0.1:5173` and proxie
 
 ## Demo Role
 
-You are the IAM Support Operator. The simulator gives you realistic evidence, not hidden scenario truth. Use the identity case queue, employee profile, policy evidence, authentication evidence, audit log, resolution gate, simulated admin actions, and ticket conversation to diagnose each case.
+You are the IAM Support Operator. The simulator gives you realistic evidence, not hidden scenario truth. Use the identity case queue, employee profile, policy evidence, authentication evidence, audit log, closure review, simulated admin actions, and ticket conversation to diagnose each case.
 
 When you type `test login again`, `try again`, `retry`, or `testa logga in igen`, the persona performs a fresh server-side access check and reports whether access is fixed or still blocked.
 
@@ -108,7 +108,7 @@ The seed includes 6 synthetic employees, 5 applications, 5 groups, managed devic
 ## Security And Trust Boundaries
 
 - All names, devices, IP addresses, apps, and groups are synthetic.
-- Scenario labels and hidden remediation recipes stay in the server module; the browser receives realistic IAM evidence and a resolution gate.
+- Scenario labels and hidden remediation recipes stay in the server module; the browser receives realistic IAM evidence and a neutral closure review.
 - Admin actions are simulated and create audit events.
 - `.env` files are ignored; `.env.example` contains only safe localhost defaults.
 - Default services bind to localhost.
