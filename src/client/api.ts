@@ -2,8 +2,9 @@ import type { AdminAction, ChatResult, PublicState, ResolutionCheck } from '../s
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
+  const headers = init?.body ? { 'Content-Type': 'application/json' } : undefined;
   const response = await fetch(`${baseUrl}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     ...init
   });
   if (!response.ok) throw new Error(await response.text());
