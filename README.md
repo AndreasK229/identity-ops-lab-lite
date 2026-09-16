@@ -1,12 +1,31 @@
 # Identity Ops Lab Lite
 
-Identity Ops Lab Lite is a clone-and-run IAM operations simulator for practicing identity support workflows without touching a real tenant. Operators investigate realistic tickets, review sign-in evidence, ask deterministic employee personas questions, perform safe simulated admin actions, request retry verification, and close tickets only after the simulated identity state is fixed.
+Identity Ops Lab Lite is a clone-and-run IAM operations simulator for practicing identity support workflows without touching a real tenant.
+
+It is built to show practical IAM operations judgment: investigating access tickets, reading sign-in and Conditional Access evidence, checking account/MFA/group/device state, applying safe simulated admin remediation, verifying retry attempts, and closing a case only when the simulated identity state is actually fixed.
 
 ![Screenshot placeholder](docs/screenshot-placeholder.svg)
 
-This is the public community/demo edition. It intentionally avoids live Entra execution, Microsoft Graph writes, scoring, premium scenario packs, hosted SaaS behavior, tenant mapping automation, Ollama/LLM persona generation, and advanced autonomous persona generation.
+## What This Demonstrates
 
-Lite uses deterministic scripted personas only. That keeps the lab reproducible, reviewable, public-safe, and focused on IAM operations rather than chatbot behavior.
+For IAM hiring managers and reviewers, this repo demonstrates:
+
+- Identity support triage using realistic symptoms, sign-in evidence, and audit trails.
+- Server-side access decision logic for account, MFA, app assignment, group membership, and managed-device compliance.
+- Safe simulated remediation actions with audit events.
+- Retry verification that runs a fresh access check after the operator asks the user to try again.
+- Resolution gates that block case closure until the underlying identity state is fixed.
+- Public-safe engineering boundaries: synthetic data, no secrets, no live tenant writes, and deterministic behavior.
+
+## At A Glance
+
+- **Stack:** React, TypeScript, Vite, Fastify, npm, Docker Compose.
+- **Data:** 6 synthetic employees, 5 applications, 5 groups, managed devices, MFA state, account state, sign-in logs, and audit logs.
+- **Scenarios:** missing app group, MFA reset, non-compliant device, terminated user still enabled.
+- **Personas:** deterministic scripted replies only.
+- **Default bind:** localhost-only.
+
+This is the public community/demo edition. It intentionally avoids live Entra execution, Microsoft Graph writes, scoring, premium scenario packs, hosted SaaS behavior, tenant mapping automation, Ollama/LLM persona generation, and advanced autonomous persona generation.
 
 ## Why This Is Not A Ticket System
 
@@ -54,6 +73,20 @@ Open [http://localhost:5173](http://localhost:5173).
 You are the IAM Support Operator. The simulator gives you realistic evidence, not hidden scenario truth. Use the identity case queue, employee profile, policy evidence, authentication evidence, audit log, resolution gate, simulated admin actions, and ticket conversation to diagnose each case.
 
 When you type `test login again`, `try again`, `retry`, or `testa logga in igen`, the persona performs a fresh server-side access check and reports whether access is fixed or still blocked.
+
+## Suggested Review Path
+
+If you are reviewing the repo quickly, open the console and try this flow:
+
+1. Select **LedgerPro opens but says I am not assigned**.
+2. Compare **Policy Evidence** with **Authentication & CA Evidence**.
+3. Notice that authentication succeeds but app assignment is missing.
+4. Click **Add app group**.
+5. Ask the employee to `test login again`.
+6. Confirm **Access Check Timeline** shows the admin action and successful retry.
+7. Click **Close ticket** and observe that closure is allowed only after remediation.
+
+That path shows the core simulator loop: symptom -> IAM evidence -> server-side access engine -> simulated admin action -> audit event -> retry verification -> close gate.
 
 ## Lite Scenarios
 
