@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    environment:
+      IOL_API_HOST: 0.0.0.0
+      IOL_API_PORT: 5173
+      IOL_WEB_ORIGIN: http://localhost:5173
+    ports:
+      - "127.0.0.1:5173:5173"
